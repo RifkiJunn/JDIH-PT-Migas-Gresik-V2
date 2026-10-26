@@ -1,0 +1,47 @@
+# Rahasia dan konfigurasi lokal
+.env
+.env.*
+!.env.example
+auth.json
+
+# Dependensi dan hasil build
+/vendor
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/public/fonts-manifest.dev.json
+/bootstrap/ssr
+*.tsbuildinfo
+
+# Data aplikasi: dokumen hukum, cadangan, dan database lokal tidak boleh ikut repo
+/storage/*.key
+/storage/pail
+/storage/app/private/*
+!/storage/app/private/.gitignore
+/storage/app/ocr-*
+/database/*.sqlite
+/database/*.sqlite-journal
+
+# Log, cache, dan hasil tes
+*.log
+.phpunit.cache
+.phpunit.result.cache
+
+# Editor, OS, dan alat bantu AI
+.DS_Store
+Thumbs.db
+/.idea
+/.vscode
+/.fleet
+/.zed
+/.nova
+/.cursor
+/.codex
+/.claude
+/.superpowers
+/.impeccable
+.phpactor.json
+_ide_helper.php
+Homestead.json
+Homestead.yaml
