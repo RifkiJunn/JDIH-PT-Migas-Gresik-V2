@@ -35,9 +35,9 @@ class DocumentWorkflow
     }
 
     /** GM wajib memutuskan sifat final; Manajer tidak mengubahnya. */
-    public function setujui(Document $document, User $user, ?Sifat $sifat = null): void
+    public function setujui(Document $document, User $user, ?Sifat $sifat = null, ?string $catatan = null): void
     {
-        $this->terkunci($document, function (Document $dok) use ($user, $sifat) {
+        $this->terkunci($document, function (Document $dok) use ($user, $sifat, $catatan) {
             $this->bolehMemutus($dok, $user);
 
             if ($dok->status === Status::MenungguManajer) {
@@ -50,7 +50,7 @@ class DocumentWorkflow
                 $pesan = "Disetujui GM, silakan TTD basah lalu upload scan-nya: {$dok->judul}";
             }
 
-            $this->catat($dok, $user, 'setujui');
+            $this->catat($dok, $user, 'setujui', $catatan);
             $dok->pengaju->notify(new Pemberitahuan($pesan, $this->url($dok)));
         });
     }

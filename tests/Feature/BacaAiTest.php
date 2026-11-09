@@ -24,7 +24,7 @@ class BacaAiTest extends TestCase
     {
         parent::setUp();
         $this->karyawan = User::factory()->peran(Peran::Karyawan, Division::factory()->create())->create();
-        config(['services.openrouter.key' => 'kunci-uji']);
+        config(['services.openrouter.key' => 'kunci-uji', 'services.gemini.key' => null]);
         Process::fake(['*' => Process::result('SURAT KEPUTUSAN NOMOR 12/SK/PTGM/2026 tentang Tim Pengadaan, ditetapkan 3 Maret 2026')]);
     }
 
@@ -82,5 +82,23 @@ class BacaAiTest extends TestCase
 
         $this->kirim()->assertStatus(422);
         Http::assertNothingSent();
+    }
+
+    public function test_kunci_habis_pindah_ke_kunci_berikutnya_lalu_ke_gemini(): void
+    {
+        config(['services.openrouter.key' => 'or-1, or-2', 'services.gemini.key' => 'gm-1']);
+        $isi = ['choices' => [['message' => ['content' => json_encode(['judul' => 'Dari Gemini'] + array_fill_keys(
+            ['nomor', 'kategori', 'tanggal_surat', 'tanggal_berlaku', 'tanggal_berakhir', 'abstrak'], null))]]]];
+        Http::fake(fn (Request $r) => match ($r->header('Authorization')[0]) {
+            'Bearer or-1' => Http::response('kuota', 429),
+            'Bearer or-2' => Http::response('kunci salah', 401),
+            'Bearer gm-1' => Http::response($isi),
+        });
+
+        $this->kirim()->assertOk()->assertJsonPath('data.judul', 'Dari Gemini');
+
+        Http::assertSentCount(3);
+        Http::assertSent(fn (Request $r) => str_starts_with($r->url(), 'https://generativelanguage.googleapis.com/')
+            && ! isset($r['provider']) && $r['model'] === config('services.gemini.model'));
     }
 }

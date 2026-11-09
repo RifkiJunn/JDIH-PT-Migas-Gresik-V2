@@ -40,6 +40,12 @@ return [
         'model' => env('OPENROUTER_MODEL', 'google/gemini-3.1-flash-lite'),
     ],
 
+    // Cadangan bila semua kunci OpenRouter gagal. Kunci dari aistudio.google.com, boleh lebih dari satu (pisah koma).
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+    ],
+
     // Pembaca teks di server (poppler-utils dan tesseract-ocr). Kosongkan TESSERACT_BIN bila tidak ada OCR.
     'ocr' => [
         'pdftotext' => env('PDFTOTEXT_BIN', 'pdftotext'),

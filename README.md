@@ -11,7 +11,17 @@ Kebutuhan lengkap ada di `BRD JDIH PT Gresik Migas.md`.
 
 Laravel 13 · Inertia 3 + React 19 + TypeScript · Tailwind CSS 4 · PostgreSQL (pengembangan) / MySQL (produksi) · PHPUnit
 
-## Menjalankan
+## Menjalankan dengan Docker
+
+Cukup Docker Desktop, tanpa PHP, Node, atau PostgreSQL:
+
+```bash
+docker compose up --build
+```
+
+Buka http://localhost:8000. Database, akun demo, OCR, dan scheduler sudah disiapkan otomatis. Untuk baca otomatis, isi `OPENROUTER_API_KEY` dan/atau `GEMINI_API_KEY` di `.env` (salin dari `.env.example`), lalu jalankan ulang. Hapus semua data: `docker compose down -v`.
+
+## Menjalankan tanpa Docker
 
 Butuh PHP 8.3+, Composer, Node 20+, dan PostgreSQL atau MySQL.
 

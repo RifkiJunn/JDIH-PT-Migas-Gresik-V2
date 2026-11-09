@@ -45,6 +45,8 @@ export async function kirimBerkas<T>(url: string, data: FormData): Promise<T> {
         method: 'POST',
         body: data,
         headers: { Accept: 'application/json', 'X-XSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
+    }).catch(() => {
+        throw new Error('Server tidak dapat dihubungi. Periksa koneksi, lalu coba lagi.');
     });
     const isi = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(isi.message ?? 'Permintaan gagal. Coba lagi.');

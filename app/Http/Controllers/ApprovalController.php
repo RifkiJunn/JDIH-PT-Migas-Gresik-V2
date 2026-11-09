@@ -33,10 +33,12 @@ class ApprovalController extends Controller
     public function setujui(Request $request, Document $document)
     {
         // Keputusan internal/eksternal hanya diminta di tahap GM.
-        $data = $request->validate(['sifat' => [Rule::requiredIf($document->status === Status::MenungguGm), 'nullable', Rule::enum(Sifat::class)]],
-            ['sifat.required' => 'Pilih apakah dokumen ini internal atau eksternal.']);
+        $data = $request->validate([
+            'sifat' => [Rule::requiredIf($document->status === Status::MenungguGm), 'nullable', Rule::enum(Sifat::class)],
+            'catatan' => ['required', 'string', 'max:2000'],
+        ], ['sifat.required' => 'Pilih apakah dokumen ini internal atau eksternal.'], ['catatan' => 'alasan']);
 
-        $this->alur->setujui($document, $request->user(), isset($data['sifat']) ? Sifat::from($data['sifat']) : null);
+        $this->alur->setujui($document, $request->user(), isset($data['sifat']) ? Sifat::from($data['sifat']) : null, $data['catatan']);
 
         return redirect('/approval')->with('sukses', "Disetujui: {$document->judul}");
     }
