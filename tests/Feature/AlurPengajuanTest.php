@@ -126,4 +126,17 @@ class AlurPengajuanTest extends TestCase
         $this->expectException(TransisiTidakSah::class);
         $this->alur->selesaikan($dok, $this->karyawan, ['berkas_final' => 'x.pdf']);
     }
+
+    public function test_setujui_lewat_halaman_wajib_alasan_dan_alasannya_tercatat(): void
+    {
+        $dok = $this->draf();
+        $this->alur->ajukan($dok, $this->karyawan);
+
+        $this->actingAs($this->manajer)->post("/approval/{$dok->id}/setujui")->assertSessionHasErrors('catatan');
+        $this->assertSame(Status::MenungguManajer, $dok->fresh()->status);
+
+        $this->actingAs($this->manajer)->post("/approval/{$dok->id}/setujui", ['catatan' => 'Isi sudah sesuai SOP.'])->assertSessionHasNoErrors();
+        $this->assertSame(Status::MenungguGm, $dok->fresh()->status);
+        $this->assertSame('Isi sudah sesuai SOP.', $dok->logs()->where('aksi', 'setujui')->value('catatan'));
+    }
 }

@@ -83,7 +83,7 @@ export function PilihBerkas({ berkas, onPilih, galat, label = 'Berkas PDF', petu
                 </div>
                 {(salah || galat) && <p className="mt-1.5 text-sm text-danger">{salah ?? galat}</p>}
             </div>
-            {pratinjau && url && <iframe src={`${url}#view=FitH`} title="Pratinjau berkas" className="h-[420px] w-full rounded-xl border border-line bg-surface" />}
+            {pratinjau && url && <iframe src={`${url}#view=FitH`} title="Pratinjau berkas" className="h-[80dvh] min-h-[520px] w-full rounded-xl border border-line bg-surface" />}
         </div>
     );
 }

@@ -167,43 +167,49 @@ function Pelacak({ status }: { status: Status }) {
 }
 
 function PanelKeputusan({ d, gm }: { d: Dokumen; gm: boolean }) {
-    const setuju = useForm<{ sifat: Sifat | '' }>({ sifat: gm ? d.sifat : '' });
-    const tolak = useForm({ catatan: '' });
-    const [bukaTolak, setBukaTolak] = useState(false);
+    const form = useForm<{ sifat: Sifat | ''; catatan: string }>({ sifat: gm ? d.sifat : '', catatan: '' });
+    const [aksi, setAksi] = useState<'setujui' | 'tolak' | null>(null);
+    const setuju = aksi === 'setujui';
+    const tutup = () => { setAksi(null); form.clearErrors(); };
 
     return (
         <Panel judul={gm ? 'Approval final (GM)' : 'Approval Manajer'} className="border-primary/30 ring-4 ring-primary/5">
             <div className="grid gap-5 p-5">
                 <p className="text-sm text-muted">
-                    Periksa draf di bawah. Setujui untuk meneruskan{gm ? ' ke tahap TTD basah' : ' ke GM'}, atau tolak dengan komentar agar pengaju merevisi.
+                    Periksa draf di bawah, lalu pilih Setujui untuk meneruskan{gm ? ' ke tahap TTD basah' : ' ke GM'} atau Tolak agar pengaju merevisi. Keduanya wajib disertai alasan.
                 </p>
                 {gm && (
                     <>
-                        <PilihSifat judul="Keputusan sifat dokumen" nilai={setuju.data.sifat} onPilih={(s) => setuju.setData('sifat', s)} galat={setuju.errors.sifat} />
+                        <PilihSifat judul="Keputusan sifat dokumen" nilai={form.data.sifat} onPilih={(s) => form.setData('sifat', s)} galat={form.errors.sifat} />
                         <p className="-mt-3 text-sm text-muted">Usulan pengaju: <strong className="text-ink">{d.sifat === 'eksternal' ? 'Eksternal' : 'Internal'}</strong>.</p>
                     </>
                 )}
                 <div className="flex flex-wrap gap-2">
-                    <Tombol onClick={() => setuju.post(`/approval/${d.id}/setujui`)} memuat={setuju.processing}>
-                        {!setuju.processing && <CircleCheck />} Setujui
-                    </Tombol>
-                    <Tombol varian="secondary" onClick={() => setBukaTolak(true)} className="text-danger"><Undo2 /> Tolak</Tombol>
+                    <Tombol onClick={() => setAksi('setujui')}><CircleCheck /> Setujui</Tombol>
+                    <Tombol varian="secondary" onClick={() => setAksi('tolak')} className="text-danger"><Undo2 /> Tolak</Tombol>
                 </div>
             </div>
-            <Dialog buka={bukaTolak} tutup={() => setBukaTolak(false)} judul="Tolak dan minta revisi">
+            <Dialog buka={aksi !== null} tutup={tutup} judul={setuju ? `Setujui dan teruskan${gm ? ' ke TTD basah' : ' ke GM'}` : 'Tolak dan minta revisi'}>
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
-                        tolak.post(`/approval/${d.id}/tolak`, { onSuccess: () => setBukaTolak(false) });
+                        form.post(`/approval/${d.id}/${aksi}`, { onSuccess: tutup, onError: (g) => g.sifat && setAksi(null) });
                     }}
                     className="grid gap-4"
                 >
-                    <Kolom label="Komentar untuk pengaju" galat={tolak.errors.catatan} wajib petunjuk="Jelaskan apa yang perlu diperbaiki. Pengajuan kembali ke pengaju dengan status Revisi.">
-                        {(id, a) => <Teks id={id} {...a} autoFocus value={tolak.data.catatan} onChange={(e) => tolak.setData('catatan', e.target.value)} />}
+                    <Kolom
+                        label={setuju ? 'Alasan persetujuan' : 'Komentar untuk pengaju'}
+                        galat={form.errors.catatan}
+                        wajib
+                        petunjuk={setuju ? 'Catatan ini tampil di riwayat dokumen dan terlihat oleh pengaju.' : 'Jelaskan apa yang perlu diperbaiki. Pengajuan kembali ke pengaju dengan status Revisi.'}
+                    >
+                        {(id, a) => <Teks id={id} {...a} autoFocus value={form.data.catatan} onChange={(e) => form.setData('catatan', e.target.value)} />}
                     </Kolom>
                     <div className="flex justify-end gap-2">
-                        <Tombol varian="secondary" onClick={() => setBukaTolak(false)}>Batal</Tombol>
-                        <Tombol type="submit" varian="danger" memuat={tolak.processing} disabled={!tolak.data.catatan.trim()}>Tolak</Tombol>
+                        <Tombol varian="secondary" onClick={tutup}>Batal</Tombol>
+                        <Tombol type="submit" varian={setuju ? 'primary' : 'danger'} memuat={form.processing} disabled={!form.data.catatan.trim()}>
+                            {setuju ? 'Setujui' : 'Tolak'}
+                        </Tombol>
                     </div>
                 </form>
             </Dialog>
