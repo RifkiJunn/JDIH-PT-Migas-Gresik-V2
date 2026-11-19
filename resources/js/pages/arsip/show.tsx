@@ -22,6 +22,12 @@ export default function DetailInternal({ dokumen: d, riwayat, boleh, kategori }:
         ? [[auth!.user.peran === 'admin' ? 'Akan Berakhir' : 'Arsip Dokumen', auth!.user.peran === 'admin' ? '/akan-berakhir' : '/arsip']]
         : boleh.putus ? [['Approval', '/approval']] : [['Pengajuan Saya', '/pengajuan']];
 
+    const abstrak = d.abstrak && (
+        <Panel judul="Abstrak">
+            <p className="max-w-[70ch] px-5 py-4 leading-relaxed whitespace-pre-line">{d.abstrak}</p>
+        </Panel>
+    );
+
     return (
         <>
             <Kepala
@@ -56,15 +62,62 @@ export default function DetailInternal({ dokumen: d, riwayat, boleh, kategori }:
 
             {d.sumber === 'pengajuan' && <Pelacak status={d.status} />}
 
+            {boleh.putus ? (
+                // Approver membaca draf sambil memutuskan: draf menempel di kiri, keputusan dan konteks di kanan.
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
+                    <Panel judul="Draf dokumen" className="lg:sticky lg:top-4 lg:self-start">
+                        <div className="p-3">
+                            <Pratinjau id={d.id} judul={d.judul} className="h-[75dvh] min-h-[420px] lg:h-[calc(100dvh-7rem)]" />
+                        </div>
+                    </Panel>
+                    <aside className="grid content-start gap-6">
+                        <PanelKeputusan d={d} gm={boleh.putus_gm} />
+                        {abstrak}
+
+                    <Panel judul="Informasi">
+                        <dl className="divide-y divide-line text-sm">
+                            {([
+                                ['Jenis', d.kategori],
+                                ['Nomor', d.nomor ?? '–'],
+                                ['Tanggal surat', tanggal(d.tanggal_surat)],
+                                ['Berlaku', tanggal(d.tanggal_berlaku)],
+                                ['Berakhir', d.tanggal_berakhir ? tanggal(d.tanggal_berakhir) : 'Tidak ditentukan'],
+                                ['Divisi', d.divisi],
+                                ['Pengaju', d.pengaju],
+                                ['Sumber', d.sumber === 'eksisting' ? 'Dokumen eksisting (Modul II)' : 'Pengajuan baru (Modul I)'],
+                                ...(d.berkas_ukuran ? [['Ukuran berkas', ukuran(d.berkas_ukuran)]] : []),
+                            ] as [string, string][]).map(([k, v]) => (
+                                <div key={k} className="grid grid-cols-[110px_1fr] gap-3 px-5 py-2.5">
+                                    <dt className="text-muted">{k}</dt>
+                                    <dd className="font-medium break-words tabular">{v}</dd>
+                                </div>
+                            ))}
+                        </dl>
+                    </Panel>
+                    <Panel judul="Riwayat">
+                        <ol className="px-5 py-4">
+                            {riwayat.map((r, i) => (
+                                <li key={r.id} className="relative grid grid-cols-[20px_1fr] gap-3 pb-5 last:pb-0">
+                                    {i < riwayat.length - 1 && <span className="absolute top-5 bottom-0 left-[9px] w-px bg-line" aria-hidden />}
+                                    <span className={cx('mt-1 grid size-5 place-items-center rounded-full ring-4 ring-bg', r.aksi === 'tolak' ? 'bg-danger' : r.aksi === 'setujui' || r.aksi === 'selesai' ? 'bg-success' : 'bg-primary')} aria-hidden>
+                                        {r.aksi === 'tolak' ? <Undo2 className="size-3 text-bg" /> : <Check className="size-3 text-bg" />}
+                                    </span>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium">{AKSI[r.aksi] ?? r.aksi}</p>
+                                        <p className="text-xs text-muted">{r.oleh} · {r.peran} · <time dateTime={r.waktu} title={new Date(r.waktu).toLocaleString('id-ID')}>{waktuLalu(r.waktu)}</time></p>
+                                        {r.catatan && <p className="mt-2 rounded-lg bg-surface px-3 py-2 text-sm whitespace-pre-line">{r.catatan}</p>}
+                                    </div>
+                                </li>
+                            ))}
+                        </ol>
+                    </Panel>
+                                    </aside>
+                </div>
+            ) : (
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_360px]">
                 <div className="grid min-w-0 content-start gap-6">
-                    {boleh.putus && <PanelKeputusan d={d} gm={boleh.putus_gm} />}
                     {boleh.selesaikan && <PanelSelesaikan d={d} kategori={kategori} />}
-                    {d.abstrak && (
-                        <Panel judul="Abstrak">
-                            <p className="max-w-[70ch] px-5 py-4 leading-relaxed whitespace-pre-line">{d.abstrak}</p>
-                        </Panel>
-                    )}
+                    {abstrak}
                     {boleh.unduh && (
                         <Panel judul={d.status === 'selesai' ? 'Dokumen' : 'Draf dokumen'}>
                             <div className="p-3">
@@ -114,6 +167,7 @@ export default function DetailInternal({ dokumen: d, riwayat, boleh, kategori }:
                     </Panel>
                 </aside>
             </div>
+            )}
 
             <Dialog buka={konfirmasi !== null} tutup={() => setKonfirmasi(null)} judul={konfirmasi === 'hapus' ? 'Hapus draf ini?' : 'Batalkan pengajuan?'}>
                 <p className="text-muted">
@@ -176,11 +230,11 @@ function PanelKeputusan({ d, gm }: { d: Dokumen; gm: boolean }) {
         <Panel judul={gm ? 'Approval final (GM)' : 'Approval Manajer'} className="border-primary/30 ring-4 ring-primary/5">
             <div className="grid gap-5 p-5">
                 <p className="text-sm text-muted">
-                    Periksa draf di bawah, lalu pilih Setujui untuk meneruskan{gm ? ' ke tahap TTD basah' : ' ke GM'} atau Tolak agar pengaju merevisi. Keduanya wajib disertai alasan.
+                    Baca draf dokumen, lalu pilih Setujui untuk meneruskan{gm ? ' ke tahap TTD basah' : ' ke GM'} atau Tolak agar pengaju merevisi. Keduanya wajib disertai alasan.
                 </p>
                 {gm && (
                     <>
-                        <PilihSifat judul="Keputusan sifat dokumen" nilai={form.data.sifat} onPilih={(s) => form.setData('sifat', s)} galat={form.errors.sifat} />
+                        <PilihSifat sempit judul="Keputusan sifat dokumen" nilai={form.data.sifat} onPilih={(s) => form.setData('sifat', s)} galat={form.errors.sifat} />
                         <p className="-mt-3 text-sm text-muted">Usulan pengaju: <strong className="text-ink">{d.sifat === 'eksternal' ? 'Eksternal' : 'Internal'}</strong>.</p>
                     </>
                 )}

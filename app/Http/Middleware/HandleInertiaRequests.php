@@ -44,7 +44,7 @@ class HandleInertiaRequests extends Middleware
             ] : null,
             'antrean' => fn () => $user?->berperan(Peran::Manajer, Peran::Gm) ? Document::antrean($user)->count() : 0,
             // Menu "Dokumen Hukum" di navbar publik.
-            'menuKategori' => fn () => $request->is('/', 'dokumen', 'dokumen/*', 'profil')
+            'menuKategori' => fn () => $request->is('/', 'dokumen', 'dokumen/*', 'profil', 'kredit')
                 ? Category::orderBy('nama')->get(['id', 'nama'])
                 : [],
         ];

@@ -16,7 +16,7 @@ export type Metadata = {
 
 export const metadataKosong: Metadata = { judul: '', category_id: '', nomor: '', tanggal_surat: '', tanggal_berlaku: '', tanggal_berakhir: '', abstrak: '' };
 
-const BATAS = 20 * 1024 * 1024;
+const BATAS = 50 * 1024 * 1024;
 
 /** Area unggah PDF: seret-lepas atau klik. Berkas yang dipilih langsung bisa dipratinjau dari perangkat sendiri. */
 export function PilihBerkas({ berkas, onPilih, galat, label = 'Berkas PDF', petunjuk, pratinjau = true }: {
@@ -42,7 +42,7 @@ export function PilihBerkas({ berkas, onPilih, galat, label = 'Berkas PDF', petu
     const terima = (f: File | undefined) => {
         if (!f) return;
         if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')) return setSalah('Hanya berkas PDF yang bisa diunggah.');
-        if (f.size > BATAS) return setSalah(`Ukuran ${ukuran(f.size)} melebihi batas 20 MB.`);
+        if (f.size > BATAS) return setSalah(`Ukuran ${ukuran(f.size)} melebihi batas 50 MB.`);
         setSalah(null);
         onPilih(f);
     };
@@ -76,7 +76,7 @@ export function PilihBerkas({ berkas, onPilih, galat, label = 'Berkas PDF', petu
                     ) : (
                         <>
                             <p className="font-medium">Seret PDF ke sini, atau <button type="button" onClick={() => input.current?.click()} className="cursor-pointer text-link hover:underline">pilih dari perangkat</button></p>
-                            <p className="text-sm text-muted">{petunjuk ?? 'PDF, maksimal 20 MB'}</p>
+                            <p className="text-sm text-muted">{petunjuk ?? 'PDF, maksimal 50 MB'}</p>
                         </>
                     )}
                     <input ref={input} type="file" accept="application/pdf,.pdf" className="sr-only" tabIndex={-1} aria-label={label} onChange={(e) => terima(e.target.files?.[0])} />
@@ -89,7 +89,10 @@ export function PilihBerkas({ berkas, onPilih, galat, label = 'Berkas PDF', petu
 }
 
 /** Tombol baca otomatis: OCR di server, teksnya dibaca AI, hasilnya mengisi kolom yang masih bisa dikoreksi (FR-19, FR-20). */
-export function BacaOtomatis({ berkas, onHasil }: { berkas: File | null; onHasil: (data: Partial<Metadata>) => void }) {
+// Berkas yang sudah dibaca otomatis: kembali ke langkah sebelumnya tidak memicu baca ulang.
+const sudahDibaca = new WeakSet<File>();
+
+export function BacaOtomatis({ berkas, onHasil, otomatis = false }: { berkas: File | null; onHasil: (data: Partial<Metadata>) => void; otomatis?: boolean }) {
     const [memuat, setMemuat] = useState(false);
     const [pesan, setPesan] = useState<{ galat: boolean; teks: string } | null>(null);
 
@@ -112,12 +115,19 @@ export function BacaOtomatis({ berkas, onHasil }: { berkas: File | null; onHasil
         }
     };
 
+    useEffect(() => {
+        if (otomatis && berkas && !sudahDibaca.has(berkas)) {
+            sudahDibaca.add(berkas);
+            baca();
+        }
+    }, [otomatis, berkas]); // eslint-disable-line react-hooks/exhaustive-deps
+
     return (
         <div className="rounded-xl border border-accent/30 bg-accent/5 p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                     <p className="flex items-center gap-2 font-medium"><Sparkles className="size-4 text-accent" aria-hidden /> Baca otomatis dengan AI</p>
-                    <p className="mt-0.5 text-sm text-muted">Nomor, perihal, dan tanggal dibaca dari scan. Teks diproses tanpa disimpan penyedia AI.</p>
+                    <p className="mt-0.5 text-sm text-muted">Nomor, perihal, dan tanggal dibaca dari berkas. Teks diproses tanpa disimpan penyedia AI.</p>
                 </div>
                 <Tombol varian="secondary" onClick={baca} memuat={memuat} disabled={!berkas}>
                     {!memuat && <Sparkles />} {memuat ? 'Membaca…' : 'Baca otomatis'}
@@ -171,7 +181,7 @@ export function IsianMetadata({ form, kategori, final = false, dariAi = [] }: { 
     );
 }
 
-export function PilihSifat({ nilai, onPilih, galat, judul = 'Sifat dokumen' }: { nilai: Sifat | ''; onPilih: (s: Sifat) => void; galat?: string; judul?: string }) {
+export function PilihSifat({ nilai, onPilih, galat, judul = 'Sifat dokumen', sempit = false }: { nilai: Sifat | ''; onPilih: (s: Sifat) => void; galat?: string; judul?: string; sempit?: boolean }) {
     const opsi = [
         ['internal', Lock, 'Internal', 'Hanya bisa dibuka divisi pemilik.'],
         ['eksternal', Globe, 'Eksternal', 'Tampil di portal JDIH untuk publik.'],
@@ -179,7 +189,7 @@ export function PilihSifat({ nilai, onPilih, galat, judul = 'Sifat dokumen' }: {
     return (
         <fieldset>
             <legend className="mb-1.5 text-sm font-medium">{judul} <span className="text-danger" aria-hidden>*</span></legend>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className={cx('grid gap-3', !sempit && 'sm:grid-cols-2')}>
                 {opsi.map(([v, Ikon, label, ket]) => (
                     <label key={v} className={cx('flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent', nilai === v ? 'border-primary bg-primary/8' : 'border-line hover:border-primary/40')}>
                         <input type="radio" name="sifat" value={v} checked={nilai === v} onChange={() => onPilih(v)} className="sr-only" />

@@ -40,6 +40,13 @@ return [
         'model' => env('OPENROUTER_MODEL', 'google/gemini-3.1-flash-lite'),
     ],
 
+    // 9router: endpoint OpenAI-compatible, dicoba paling awal bila kuncinya diisi.
+    'ninerouter' => [
+        'key' => env('NINEROUTER_API_KEY'),
+        'url' => env('NINEROUTER_URL', 'http://169.40.151.48:28417/v1'),
+        'model' => env('NINEROUTER_MODEL', 'testing'),
+    ],
+
     // Cadangan bila semua kunci OpenRouter gagal. Kunci dari aistudio.google.com, boleh lebih dari satu (pisah koma).
     'gemini' => [
         'key' => env('GEMINI_API_KEY'),

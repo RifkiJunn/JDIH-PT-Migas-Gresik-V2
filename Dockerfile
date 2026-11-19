@@ -14,6 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-install pdo_pgsql zip \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Bawaan PHP hanya 2 MB per upload. Dokumen sampai 50 MB, zip cadangan untuk dipulihkan sampai 1 GB.
+RUN echo 'upload_max_filesize=1G' > /usr/local/etc/php/conf.d/upload.ini \
+    && echo 'post_max_size=1G' >> /usr/local/etc/php/conf.d/upload.ini
 
 WORKDIR /app
 COPY composer.json composer.lock ./

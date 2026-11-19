@@ -24,7 +24,7 @@ class BacaAiTest extends TestCase
     {
         parent::setUp();
         $this->karyawan = User::factory()->peran(Peran::Karyawan, Division::factory()->create())->create();
-        config(['services.openrouter.key' => 'kunci-uji', 'services.gemini.key' => null]);
+        config(['services.openrouter.key' => 'kunci-uji', 'services.gemini.key' => null, 'services.ninerouter.key' => null]);
         Process::fake(['*' => Process::result('SURAT KEPUTUSAN NOMOR 12/SK/PTGM/2026 tentang Tim Pengadaan, ditetapkan 3 Maret 2026')]);
     }
 
@@ -100,5 +100,32 @@ class BacaAiTest extends TestCase
         Http::assertSentCount(3);
         Http::assertSent(fn (Request $r) => str_starts_with($r->url(), 'https://generativelanguage.googleapis.com/')
             && ! isset($r['provider']) && $r['model'] === config('services.gemini.model'));
+    }
+
+    public function test_9router_dipakai_lebih_dulu_dengan_endpoint_dan_model_dari_env(): void
+    {
+        config(['services.ninerouter' => ['key' => 'nr-1', 'url' => 'http://9router.uji:28417/v1', 'model' => 'testing']]);
+        Http::fake(['9router.uji:28417/*' => Http::response(['choices' => [['message' => ['content' => json_encode(['judul' => 'Dari 9router'] + array_fill_keys(
+            ['nomor', 'kategori', 'tanggal_surat', 'tanggal_berlaku', 'tanggal_berakhir', 'abstrak'], null))]]]])]);
+
+        $this->kirim()->assertOk()->assertJsonPath('data.judul', 'Dari 9router');
+
+        Http::assertSentCount(1);
+        Http::assertSent(fn (Request $r) => $r->url() === 'http://9router.uji:28417/v1/chat/completions'
+            && $r['model'] === 'testing' && ! isset($r['provider']) && $r->header('Authorization')[0] === 'Bearer nr-1');
+    }
+
+    public function test_jawaban_bukan_json_pindah_ke_penyedia_berikutnya_dan_blok_kode_diterima(): void
+    {
+        config(['services.openrouter.key' => 'or-1, or-2', 'services.gemini.key' => null]);
+        $json = json_encode(['judul' => 'Dari or-2'] + array_fill_keys(['nomor', 'kategori', 'tanggal_surat', 'tanggal_berlaku', 'tanggal_berakhir', 'abstrak'], null));
+        Http::fake(fn (Request $r) => Http::response(['choices' => [['message' => ['content' => match ($r->header('Authorization')[0]) {
+            'Bearer or-1' => 'Maaf, saya tidak bisa.',
+            'Bearer or-2' => "```json
+{$json}
+```",
+        }]]]]));
+
+        $this->kirim()->assertOk()->assertJsonPath('data.judul', 'Dari or-2');
     }
 }

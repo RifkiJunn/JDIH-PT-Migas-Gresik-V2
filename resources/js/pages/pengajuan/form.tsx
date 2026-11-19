@@ -1,7 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import { ArrowLeft, ArrowRight, Check, MessageSquareWarning, Save, Send } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
-import { IsianMetadata, type Metadata, metadataKosong, PilihBerkas, PilihSifat } from '@/components/form-dokumen';
+import { type FormEvent, useEffect, useState } from 'react';
+import { BacaOtomatis, IsianMetadata, type Metadata, metadataKosong, PilihBerkas, PilihSifat } from '@/components/form-dokumen';
 import { Panel, Tombol } from '@/components/ui';
 import { Kepala } from '@/layouts/internal';
 import { cx, tanggal } from '@/lib';
@@ -13,6 +13,7 @@ const LANGKAH = ['Upload draf', 'Metadata', 'Kirim'];
 export default function FormPengajuan({ dokumen, kategori, catatan }: { dokumen: Dokumen | null; kategori: Opsi[]; catatan?: string | null }) {
     const ubah = dokumen !== null;
     const [langkah, setLangkah] = useState(0);
+    const [dariAi, setDariAi] = useState<string[]>([]);
     const form = useForm<Metadata & { sifat: Sifat | ''; berkas: File | null; ajukan: boolean }>({
         ...metadataKosong,
         ...(dokumen && {
@@ -28,6 +29,15 @@ export default function FormPengajuan({ dokumen, kategori, catatan }: { dokumen:
         berkas: null,
         ajukan: false,
     });
+
+    // Pratinjau di langkah Metadata: berkas yang baru dipilih, atau draf lama saat revisi.
+    const [urlDraf, setUrlDraf] = useState<string | null>(null);
+    useEffect(() => {
+        if (!form.data.berkas) return setUrlDraf(ubah ? `/dokumen/${dokumen.id}/berkas` : null);
+        const u = URL.createObjectURL(form.data.berkas);
+        setUrlDraf(u);
+        return () => URL.revokeObjectURL(u);
+    }, [form.data.berkas]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const bolehLanjut = [ubah || form.data.berkas !== null, form.data.judul.trim() !== '' && form.data.category_id !== '' && form.data.sifat !== ''];
 
@@ -88,14 +98,33 @@ export default function FormPengajuan({ dokumen, kategori, catatan }: { dokumen:
                             onPilih={(f) => form.setData('berkas', f)}
                             galat={form.errors.berkas}
                             label={ubah ? 'Ganti draf (opsional)' : 'Draf dokumen'}
-                            petunjuk={ubah ? 'Biarkan kosong untuk memakai draf sebelumnya. PDF, maks. 20 MB.' : 'Draf belum ber-TTD. PDF, maksimal 20 MB.'}
+                            petunjuk={ubah ? 'Biarkan kosong untuk memakai draf sebelumnya. PDF, maks. 50 MB.' : 'Draf belum ber-TTD. PDF, maksimal 50 MB.'}
                         />
                     )}
                     {langkah === 1 && (
-                        <div className="grid gap-6">
-                            <IsianMetadata form={form} kategori={kategori} />
-                            <PilihSifat judul="Usulan sifat dokumen" nilai={form.data.sifat} onPilih={(s) => form.setData('sifat', s)} galat={form.errors.sifat} />
-                            <p className="-mt-3 text-sm text-muted">Keputusan akhir internal atau eksternal ada di GM.</p>
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                            <div className="grid min-w-0 content-start gap-6">
+                                <BacaOtomatis
+                                    berkas={form.data.berkas}
+                                    otomatis
+                                    onHasil={(h) => {
+                                        // Hanya kolom yang masih kosong: isian pengguna tidak ditimpa.
+                                        const kosong = Object.fromEntries(Object.entries(h).filter(([k]) => !form.data[k as keyof Metadata]));
+                                        form.setData((d) => ({ ...d, ...kosong }));
+                                        setDariAi(Object.keys(kosong));
+                                    }}
+                                />
+                                <IsianMetadata form={form} kategori={kategori} dariAi={dariAi} />
+                                <PilihSifat judul="Usulan sifat dokumen" nilai={form.data.sifat} onPilih={(s) => form.setData('sifat', s)} galat={form.errors.sifat} />
+                                <p className="-mt-3 text-sm text-muted">Keputusan akhir internal atau eksternal ada di GM.</p>
+                            </div>
+                            {urlDraf && (
+                                <iframe
+                                    src={`${urlDraf}#view=FitH`}
+                                    title="Pratinjau draf"
+                                    className="h-[70dvh] min-h-[420px] w-full rounded-xl border border-line bg-surface lg:sticky lg:top-4 lg:h-[calc(100dvh-8rem)]"
+                                />
+                            )}
                         </div>
                     )}
                     {langkah === 2 && (

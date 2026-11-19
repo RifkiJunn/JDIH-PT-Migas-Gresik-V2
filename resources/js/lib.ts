@@ -79,5 +79,12 @@ export const INSTANSI = {
     alamat: 'Gresik, Jawa Timur',
     email: null as string | null,
     telepon: null as string | null,
-    pengembang: 'Tim Capstone JDIH PTGM',
+    pengembang: 'Telkom University Surabaya',
 };
+
+/** Halaman Kredit. Ganti dengan nama dan peran anggota tim yang sebenarnya. */
+export const TIM: { nama: string; peran: string; nim?: string; github?: string }[] = [
+    { nama: 'Rifki', peran: 'Full-stack developer', github: 'RifkiJunn' },
+    { nama: 'Nama Anggota', peran: 'Peran' },
+    { nama: 'Nama Anggota', peran: 'Peran' },
+];

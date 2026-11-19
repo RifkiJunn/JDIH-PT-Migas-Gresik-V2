@@ -36,7 +36,7 @@ export default function FormEksisting({ kategori }: { kategori: Opsi[] }) {
             >
                 <Panel judul="1. Upload scan">
                     <div className="grid gap-5 p-5">
-                        <PilihBerkas berkas={form.data.berkas} onPilih={(f) => form.setData('berkas', f)} galat={form.errors.berkas} label="Scan dokumen ber-TTD" petunjuk="PDF hasil scan minimal 300 dpi, maksimal 20 MB" />
+                        <PilihBerkas berkas={form.data.berkas} onPilih={(f) => form.setData('berkas', f)} galat={form.errors.berkas} label="Scan dokumen ber-TTD" petunjuk="PDF hasil scan minimal 300 dpi, maksimal 50 MB" />
                         <BacaOtomatis
                             berkas={form.data.berkas}
                             onHasil={(h) => {

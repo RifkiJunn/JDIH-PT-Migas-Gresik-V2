@@ -57,7 +57,7 @@ export default function Login() {
                 </form>
                 <p className="mt-6 text-center text-xs text-muted">Lupa password? Hubungi Admin untuk direset.</p>
             </main>
-            <p className="mt-6 text-xs text-muted">© {new Date().getFullYear()} {INSTANSI.nama} · Developed by {INSTANSI.pengembang}</p>
+            <p className="mt-6 text-xs text-muted">© {new Date().getFullYear()} {INSTANSI.nama} · Developed by <Link href="/kredit" className="underline-offset-4 hover:text-ink hover:underline">{INSTANSI.pengembang}</Link></p>
         </div>
     );
 }

@@ -138,7 +138,7 @@ export default function InternalLayout({ children }: { children: ReactNode }) {
                     <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
                     <footer className="mx-auto flex w-full max-w-7xl flex-wrap justify-between gap-2 px-4 py-5 text-xs text-muted sm:px-6 lg:px-8">
                         <span>© {new Date().getFullYear()} {INSTANSI.nama}</span>
-                        <span>Developed by {INSTANSI.pengembang}</span>
+                        <span>Developed by <Link href="/kredit" className="underline-offset-4 hover:text-ink hover:underline">{INSTANSI.pengembang}</Link></span>
                     </footer>
                 </div>
             </div>
