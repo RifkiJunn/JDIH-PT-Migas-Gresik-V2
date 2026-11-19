@@ -8,7 +8,7 @@ import { cx, INSTANSI, useShared } from '@/lib';
 const MENU = [
     { label: 'Beranda', href: '/' },
     { label: 'Dokumen Hukum', href: '/dokumen', sub: true },
-    { label: 'Profil', href: '/profil' },
+    { label: 'Tentang', href: '/profil' },
     { label: 'Kontak', href: '/profil#kontak' },
 ];
 
@@ -98,7 +98,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
                         </p>
                         <p className="text-sm">{INSTANSI.alamat}</p>
                     </div>
-                    <TautanFooter judul="Tautan cepat" tautan={[['Beranda', '/'], ['Dokumen Hukum', '/dokumen'], ['Profil JDIH', '/profil'], ['Kontak', '/profil#kontak']]} />
+                    <TautanFooter judul="Tautan cepat" tautan={[['Beranda', '/'], ['Dokumen Hukum', '/dokumen'], ['Tentang JDIH', '/profil'], ['Kontak', '/profil#kontak']]} />
                     <TautanFooter judul="Kategori" tautan={menuKategori.slice(0, 6).map((k) => [k.nama, `/dokumen?kategori=${k.id}`])} />
                     <div className="grid content-start gap-3 text-sm">
                         <h2 className="font-semibold text-white">Informasi</h2>
@@ -112,7 +112,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
                 <div className="border-t border-white/10">
                     <div className="mx-auto flex max-w-6xl flex-wrap justify-between gap-2 px-4 py-5 text-xs text-white/65 sm:px-6">
                         <p>© {new Date().getFullYear()} {INSTANSI.nama}. Hak cipta dilindungi.</p>
-                        <p>Developed by {INSTANSI.pengembang}</p>
+                        <p>Developed by <Link href="/kredit" className="underline-offset-4 hover:text-white hover:underline">{INSTANSI.pengembang}</Link></p>
                     </div>
                 </div>
             </footer>

@@ -23,6 +23,7 @@ Route::get('dokumen', [PublikController::class, 'index']);
 Route::get('dokumen/{document}', [PublikController::class, 'show']);
 Route::get('dokumen/{document}/berkas', BerkasController::class);
 Route::get('profil', [PublikController::class, 'profil']);
+Route::inertia('kredit', 'publik/kredit');
 
 // Tidak ada tombol login di portal publik (BRD bagian 7); pegawai membuka /login langsung.
 Route::middleware('guest')->group(function () {

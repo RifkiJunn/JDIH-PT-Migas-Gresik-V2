@@ -31,7 +31,7 @@ class HalamanTest extends TestCase
     {
         $publik = Document::visibleTo(null)->first();
 
-        foreach (['/', '/dokumen', '/dokumen?q=gas&kategori=1&tahun=2026&masa=berlaku&urut=populer', "/dokumen/{$publik->id}", '/profil', '/login'] as $url) {
+        foreach (['/', '/dokumen', '/dokumen?q=gas&kategori=1&tahun=2026&masa=berlaku&urut=populer', "/dokumen/{$publik->id}", '/profil', '/kredit', '/login'] as $url) {
             $this->get($url)->assertOk();
         }
         $this->get("/dokumen/{$publik->id}/berkas")->assertOk()->assertHeader('content-type', 'application/pdf');

@@ -71,7 +71,7 @@ class Document extends Model
         ];
     }
 
-    const ATURAN_BERKAS = ['file', 'mimes:pdf', 'max:20480'];
+    const ATURAN_BERKAS = ['file', 'mimes:pdf', 'max:51200'];
 
     /** Padanan query DocumentPolicy::view. */
     #[Scope]
